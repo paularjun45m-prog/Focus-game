@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>ফোকাস ট্রেইনার 🎯</title>
+
+  <style>
+    /* =========================
+       Base
+    ========================== */
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      background:
+        radial-gradient(circle at top, #172554 0%, #0f172a 45%, #020617 100%);
+      color: #e2e8f0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* =========================
+       Game Card
+    ========================== */
+    .game {
+      width: 100%;
+      max-width: 430px;
+      padding: 22px;
+      background: rgba(30, 41, 59, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(12px);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      text-align: center;
+      color: #38bdf8;
+      font-size: 1.65rem;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    /* =========================
+       Stats
+    ========================== */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      padding: 9px 6px;
+      border-radius: 12px;
+      background: #0f172a;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #94a3b8;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 2px;
+      color: #facc15;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+
+    /* =========================
+       Game Grid
+    ========================== */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .cell {
+      width: 100%;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      background: #334155;
+      cursor: pointer;
+      transition:
+        transform 0.08s ease,
+        background 0.12s ease,
+        box-shadow 0.12s ease;
+    }
+
+    .cell:active {
+      transform: scale(0.91);
+    }
+
+    .cell.target {
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow:
+        0 0 12px rgba(34, 197, 94, 0.85),
+        0 0 26px rgba(34, 197, 94, 0.35);
+    }
+
+    .cell.distractor {
+      background: #ef4444;
+      border-radius: 50%;
+      box-shadow:
+        0 0 10px rgba(239, 68, 68, 0.75),
+        0 0 20px rgba(239, 68, 68, 0.25);
+    }
+
+    .cell.wrong {
+      outline: 3px solid #f97316;
+      animation: shake 0.2s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* =========================
+       Message
+    ========================== */
+    #message {
+      min-height: 22px;
+      margin-bottom: 12px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    /* =========================
+       Start Button
+    ========================== */
+    #startBtn {
+      width: 100%;
+      padding: 13px 16px;
+      border: 0;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.22);
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    #startBtn:hover:not(:disabled) {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    #startBtn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #startBtn:disabled {
+      background: #475569;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* =========================
+       Mobile
+    ========================== */
+    @media (max-width: 420px) {
+      .game {
+        padding: 17px;
+        border-radius: 20px;
+      }
+
+      #grid {
+        gap: 6px;
+      }
+
+      .cell {
+        border-radius: 10px;
+      }
+
+      h1 {
+        font-size: 1.45rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="game">
+    <h1>🎯 ফোকাস ট্রেইনার</h1>
+    <p class="subtitle">ফোকাস বাড়ান, দ্রুত সিদ্ধান্ত নিন</p>
+
+    <section class="stats" aria-label="গেম স্ট্যাটস">
+      <div class="stat">
+        স্কোর
+        <span id="score">0</span>
+      </div>
+
+      <div class="stat">
+        সময়
+        <span id="time">30</span>
+      </div>
+
+      <div class="stat">
+        বেস্ট
+        <span id="best">0</span>
+      </div>
+    </section>
+
+    <!-- 5 × 5 game grid -->
+    <div id="grid" aria-label="ফোকাস গেম গ্রিড"></div>
+
+    <div id="message" role="status">
+      শুরু করতে নিচের বাটনে ক্লিক করুন
+    </div>
+
+    <button id="startBtn" type="button">
+      শুরু করুন
+    </button>
+  </main>
+
+  <script>
+    "use strict";
+
+    /* =========================
+       DOM Elements
+    ========================== */
+    const grid = document.getElementById("grid");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const bestEl = document.getElementById("best");
+    const startBtn = document.getElementById("startBtn");
+    const message = document.getElementById("message");
+
+    /* =========================
+       Game Constants
+    ========================== */
+    const SIZE = 5;
+    const TOTAL = SIZE * SIZE;
+    const GAME_TIME = 30;
+
+    /* =========================
+       Game State
+    ========================== */
+    let cells = [];
+    let score = 0;
+    let time = GAME_TIME;
+    let best = Number(localStorage.getItem("focusBest")) || 0;
+    let playing = false;
+    let timerId = null;
+    let targetIndex = -1;
+
+    /* =========================
+       Create 25 Cells
+    ========================== */
+    for (let i = 0; i < TOTAL; i++) {
+      const cell = document.createElement("button");
+
+      cell.type = "button";
+      cell.className = "cell";
+      cell.dataset.index = i;
+      cell.setAttribute("aria-label", `ঘর ${i + 1}`);
+
+      cell.addEventListener("click", () => handleClick(i));
+
+      grid.appendChild(cell);
+      cells.push(cell);
+    }
+
+    bestEl.textContent = best;
+
+    /* =========================
+       Fisher-Yates Shuffle
+    ========================== */
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+
+      return array;
+    }
+
+    /* =========================
+       Clear Board
+    ========================== */
+    function clearBoard() {
+      cells.forEach((cell) => {
+        cell.classList.remove("target", "distractor", "wrong");
+      });
+    }
+
+    /* =========================
+       Update UI
+    ========================== */
+    function updateUI() {
+      scoreEl.textContent = score;
+      timeEl.textContent = time;
+      bestEl.textContent = best;
+    }
+
+    /* =========================
+       Start a New Round
+    ========================== */
+    function newRound() {
+      clearBoard();
+
+      // Pick a random green target
+      targetIndex = Math.floor(Math.random() * TOTAL);
+      cells[targetIndex].classList.add("target");
+
+      // More distractors as the score increases
+      const distractorCount =
+        Math.min(8, Math.floor(score / 5) + 1);
+
+      const available = [...Array(TOTAL).keys()]
+        .filter((index) => index !== targetIndex);
+
+      shuffle(available);
+
+      for (let i = 0; i < distractorCount; i++) {
+        cells[available[i]].classList.add("distractor");
+      }
+    }
+
+    /* =========================
+       Wrong Click Animation
+    ========================== */
+    function showWrongEffect(cell) {
+      cell.classList.remove("wrong");
+
+      // Force animation to restart
+      void cell.offsetWidth;
+
+      cell.classList.add("wrong");
+
+      setTimeout(() => {
+        cell.classList.remove("wrong");
+      }, 200);
+    }
+
+    /* =========================
+       Handle Cell Click
+    ========================== */
+    function handleClick(index) {
+      if (!playing) return;
+
+      // Correct target
+      if (index === targetIndex) {
+        score++;
+        updateUI();
+        newRound();
+      }
+
+      // Red distractor
+      else if (cells[index].classList.contains("distractor")) {
+        score = Math.max(0, score - 1);
+        time = Math.max(0, time - 2);
+
+        updateUI();
+        showWrongEffect(cells[index]);
+      }
+
+      // Empty cell
+      else {
+        time = Math.max(0, time - 1);
+
+        updateUI();
+        showWrongEffect(cells[index]);
+      }
+
+      if (time <= 0) {
+        endGame();
+      }
+    }
+
+    /* =========================
+       Start Game
+    ========================== */
+    function startGame() {
+      clearInterval(timerId);
+
+      score = 0;
+      time = GAME_TIME;
+      playing = true;
+
+      startBtn.disabled = true;
+      startBtn.textContent = "খেলা চলছে...";
+      message.textContent =
+        "সবুজ বৃত্তে ক্লিক করুন, লাল এড়িয়ে চলুন!";
+
+      updateUI();
+      newRound();
+
+      timerId = setInterval(() => {
+        time--;
+        timeEl.textContent = time;
+
+        if (time <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    /* =========================
+       End Game
+    ========================== */
+    function endGame() {
+      if (!playing) return;
+
+      playing = false;
+      clearInterval(timerId);
+      timerId = null;
+
+      clearBoard();
+
+      startBtn.disabled = false;
+      startBtn.textContent = "আবার খেলুন";
+
+      if (score > best) {
+        best = score;
+        localStorage.setItem("focusBest", String(best));
+        message.textContent =
+          `🎉 নতুন বেস্ট! আপনার স্কোর: ${score}`;
+      } else {
+        message.textContent =
+          `খেলা শেষ! আপনার স্কোর: ${score}`;
+      }
+
+      updateUI();
+    }
+
+    /* =========================
+       Start Button
+    ========================== */
+    startBtn.addEventListener("click", startGame);
+
+    /* Initial UI */
+    updateUI();
+  </script>
+
+</body>
+</html>
